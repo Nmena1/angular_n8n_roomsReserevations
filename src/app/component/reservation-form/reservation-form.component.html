@@ -1,0 +1,113 @@
+
+<div class="formbold-main-wrapper">
+
+  <div class="formbold-form-wrapper">
+
+    <label for="jobtitle" class="formbold-form-label1"> Solicitud de Reserva de Salas </label>
+    
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="reservation-form">
+
+      
+      <div class="flex flex-wrap formbold--mx-3">
+
+        <div class="w-full sm:w-half formbold-px-3">
+
+          <div class="formbold-mb-5">
+         
+            <label for="name" class="formbold-form-label"> Solicitante </label>
+            <input
+              type="text"
+              name="name"
+              id="name"
+              formControlName="name"
+              placeholder="Nombre completo"
+              class="formbold-form-input"
+            />
+
+            <div *ngIf="form.get('name')?.invalid && form.get('name')?.touched" class="formbold-form-input-error">
+              El nombre es obligatorio.
+            </div>
+       
+          </div>
+        </div>
+
+        <div class="w-full sm:w-half formbold-px-3">
+          <div class="formbold-mb-5">
+
+            <label for="email" class="formbold-form-label"> Email </label>
+            <input
+              type="email"
+              name="email"
+              id="email"
+              formControlName="email"
+              placeholder="prueba@goes.gob.sv"
+              class="formbold-form-input"
+              change=""
+            />
+      
+            <div *ngIf="form.get('email')?.invalid && form.get('email')?.touched" class="formbold-form-input-error">
+              Ingresa un correo válido.
+            </div>
+      
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex flex-wrap formbold--mx-3">
+
+        <div class="w-full sm:w-half formbold-px-3">
+          <div class="formbold-mb-5">
+            
+            <div>
+              <label class="formbold-form-label">Sala</label>
+              <select class="formbold-form-input" name="room" id="room" formControlName="room">
+                <option value="" disabled selected>Selecciona una Sala...</option>
+                <option *ngFor="let room of rooms" [value]="room.id_sala">
+                  {{ room.nombre_sala }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="w-full sm:w-half formbold-px-3">
+          <div class="formbold-mb-5">
+            
+            <div>
+              <label class="formbold-form-label">Horario</label>
+              <select class="formbold-form-input" name="requestDate" id="requestDate" formControlName="requestDate">
+                <option value="" disabled selected>Selecciona un horario</option>
+                <option *ngFor="let schedule of schedules" [value]="schedule.id_horario">
+                  {{ schedule.inicio }} - {{schedule.fin }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex flex-wrap formbold--mx-3">
+        <div class="w-full sm:w-half formbold-px-3">
+          <div class="formbold-mb-5 w-full">
+            <label for="date" class="formbold-form-label"> Fecha de la Reserva </label>
+            <input
+              type="date"
+              name="date"
+              id="date"
+              formControlName="schedule"
+              class="formbold-form-input"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <button class="formbold-btn" [disabled]="form.invalid">Solicitar</button>
+      </div>
+      <div *ngIf="downloading"><mat-progress-bar mode="indeterminate"></mat-progress-bar></div>
+    </form>
+  </div>
+</div>
+
