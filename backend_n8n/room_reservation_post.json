@@ -1,0 +1,522 @@
+{
+  "name": "room_reservation_post",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "reservation",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "49ab9bc4-d7c1-49b0-b822-dc27e7d13532",
+      "name": "Webhook",
+      "webhookId": "c3f87936-687c-488d-9818-488ad3e618bc"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet mdlReservation = $input.all().map((item) => item.json);\nlet dataModel = $(\"Webhook\").all().map((item) => item.json.body);\n\nfunction formatDateEUtoISO(dateStr) {\n  let [day, month, year] = dateStr.split(\"-\");\n  return `${year}/${month}/${day}`;\n}\n\nlet isRegister = mdlReservation.filter(mdl => \n  mdl.id_horario == dataModel[0].requestDate &&\n  mdl.id_sala == dataModel[0].room && mdl.fecha == formatDateEUtoISO(dataModel[0].schedule)\n);\n\nconsole.log(\"room=\" + dataModel[0].room + \", time=\" + dataModel[0].requestDate + \", dataconvert=\" + formatDateEUtoISO(dataModel[0].schedule) + \",date===\" + dataModel[0].schedule)\n\nconsole.log(isRegister)\n\ndataModel[0].schedule = formatDateEUtoISO(dataModel[0].schedule);\n\nreturn [\n  {\n     json: {\n       register: isRegister.length === 0,\n       dataModel,\n       isRegister\n     }\n  }\n];\n// isRegister.length > 0\n// if (isRegister && isRegister.length > 0) {\n//   return [\n//     {\n//       json: {\n//         register: false,\n//         dataModel,\n//         isRegister\n//       }\n//     }\n//   ];\n// } else {\n//   return [\n//     {\n//       json: {\n//         register: true,\n//         dataModel,\n//         isRegister\n//       }\n//     }\n//   ];\n// }\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "9e693c52-8d09-4319-8694-c77baba62ae0",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug",
+          "mode": "list",
+          "cachedResultName": "roomReservations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2051436091,
+          "mode": "list",
+          "cachedResultName": "reversation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug/edit#gid=2051436091"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        220,
+        0
+      ],
+      "id": "ecb3785f-11d4-442d-9806-6fab75de86ce",
+      "name": "getReservations",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nY00U24oj9Jl61sc",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8eebc2f0-ef69-4312-a358-00d2f3cac116",
+              "leftValue": "={{ $json.register }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "1db7f0ac-404c-42ce-b6a9-5618d9a3d7b5",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug",
+          "mode": "list",
+          "cachedResultName": "roomReservations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2051436091,
+          "mode": "list",
+          "cachedResultName": "reversation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug/edit#gid=2051436091"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_horario": "={{ $('Code').item.json.dataModel[0].requestDate }}",
+            "id_sala": "={{ $('Code').item.json.dataModel[0].room }}",
+            "nombre_usuario": "={{ $('Code').item.json.dataModel[0].name }}",
+            "correo": "={{ $('Code').item.json.dataModel[0].email }}",
+            "fecha": "={{ $('Code').item.json.dataModel[0].schedule }}",
+            "telegram_id": "0",
+            "evento_id": "0"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_sala",
+              "displayName": "id_sala",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "id_horario",
+              "displayName": "id_horario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nombre_usuario",
+              "displayName": "nombre_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "correo",
+              "displayName": "correo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "telegram_id",
+              "displayName": "telegram_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "evento_id",
+              "displayName": "evento_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        880,
+        -100
+      ],
+      "id": "eb3014f2-2785-4296-8c65-77b39c7535ba",
+      "name": "saveReservations",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nY00U24oj9Jl61sc",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug",
+          "mode": "list",
+          "cachedResultName": "roomReservations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1342995672,
+          "mode": "list",
+          "cachedResultName": "horario",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug/edit#gid=1342995672"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id_horario",
+              "lookupValue": "={{ $json.id_horario }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1140,
+        -100
+      ],
+      "id": "a37d234b-68e3-4b89-a34a-9ac6d52fd4f5",
+      "name": "getSchedule",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nY00U24oj9Jl61sc",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet schedule = $(\"getSchedule\").all().map((item) => item.json);\nlet reservation = $('Code').first().json.dataModel;\nlet room = $(\"getRooms\").all().map((item) => item.json);\n\nfunction formatDateEUtoISO(dateStr) {\n  let [day, month, year] = dateStr.split(\"/\");\n  return `${year}-${month}-${day}`;\n}\n\nconst startHour = schedule[0].inicio;\nconst endHour = schedule[0].fin;\nconst eventDate = formatDateEUtoISO(reservation[0].schedule); \n\nconst pad = (n) => n.toString().padStart(2, '0');\nconst startEvent = `${eventDate} ${pad(startHour)}:00:00`;\nconst endEvent = `${eventDate} ${pad(endHour)}:00:00`;\nconst start = `${pad(startHour)}:00:00`;\nconst end = `${pad(endHour)}:00:00`;\nconst email = reservation[0].email;\nconst description = \"Reserva de Salón: '\" + room[0].nombre_sala + \"'\";\nconst dayx = reservation[0].schedule;\nconst rooms = room[0].nombre_sala;\n\nreturn { email, description, start, end, dayx, startEvent, endEvent, rooms }"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1580,
+        -100
+      ],
+      "id": "abaaab74-b11f-4e95-a84e-2fd574819a29",
+      "name": "prepareEvent"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug",
+          "mode": "list",
+          "cachedResultName": "roomReservations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "room",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id_sala",
+              "lookupValue": "={{ $('saveReservations').item.json.id_sala }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1360,
+        -100
+      ],
+      "id": "32187544-23ab-4a6f-ac18-98785ec08479",
+      "name": "getRooms",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nY00U24oj9Jl61sc",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// const message = \"La sala seleccionada no esta disponible\"\n// return {message};\nconst message = \"La sala seleccionada no está disponible en ese horario\";\nconst code = 400;\n\nreturn [{ json: { code, message } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        100
+      ],
+      "id": "1a13c642-b231-4aa2-91da-e98ad4a5570a",
+      "name": "noAvailable"
+    },
+    {
+      "parameters": {
+        "jsCode": "let event = $(\"prepareEvent\").all().map((item) => item.json);\nreturn {event}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        -100
+      ],
+      "id": "6096fec6-763f-4529-9620-405d0ab627ad",
+      "name": "return"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "={{ $json.email }}",
+          "mode": "id"
+        },
+        "start": "={{ $json.startEvent }}",
+        "end": "={{ $json.endEvent }}",
+        "additionalFields": {
+          "description": "={{ $json.description }}",
+          "summary": "={{ $json.description }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1800,
+        -100
+      ],
+      "id": "9e19d996-6070-433e-b8be-04c1a4637bda",
+      "name": "Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "tk4qGokIW70rFCKQ",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "pruebasit@goes.gob.sv",
+        "toEmail": "={{ $json.event[0].email }}",
+        "subject": "={{ $json.event[0].description }}",
+        "html": "=<div style=\"font-family: Arial, sans-serif; color: #333;\">\n          <h2 style=\"color: #2c3e50;\">📝 Detalle de su Reservación:</h2>\n\n          <p><strong>📌 Sala:</strong> {{ $json.event[0].rooms }} </p>\n          <p><strong>📅 Hora inicio:</strong> {{ $json.event[0].start }}</p>\n          <p><strong>📅 Hora fin:</strong>{{ $json.event[0].end }} </p>\n          <p><strong>📆 Día:</strong> {{ $json.event[0].dayx }}</p>\n          \n          <p><strong>🗒️ Descripción:</strong> Haz realizado con éxito la reserva del salón {{ $json.event[0].rooms }} </p>\n\n          <hr style=\"margin: 20px 0; border: none; border-top: 1px solid #ccc;\" />\n\n\n        </div>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2220,
+        -100
+      ],
+      "id": "f99a3cb1-fd76-4176-a32d-197b3829d638",
+      "name": "Send Email",
+      "webhookId": "126e76fb-6c87-46e2-9cc9-05eb9e1d76c9",
+      "credentials": {
+        "smtp": {
+          "id": "ghM2YiriLDNgXHbT",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "getReservations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getReservations": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "saveReservations",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "noAvailable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "saveReservations": {
+      "main": [
+        [
+          {
+            "node": "getSchedule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getSchedule": {
+      "main": [
+        [
+          {
+            "node": "getRooms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepareEvent": {
+      "main": [
+        [
+          {
+            "node": "Google Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getRooms": {
+      "main": [
+        [
+          {
+            "node": "prepareEvent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar": {
+      "main": [
+        [
+          {
+            "node": "return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "return": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ae9a1c18-dd2b-441a-a1e4-8e67e0b2ff1f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "73bd73ec0b6820b8161bba48d6f6f5dccad84d155d227fd7f9240e434ae037d0"
+  },
+  "id": "Fwh1DB6TDyHKQGOa",
+  "tags": []
+}

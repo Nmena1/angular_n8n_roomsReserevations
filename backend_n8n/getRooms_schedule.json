@@ -1,0 +1,196 @@
+{
+  "name": "getRooms_schedule",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "catalogs",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f8986ab1-b3a4-49aa-b453-4ab0ee65754e",
+      "name": "Webhook",
+      "webhookId": "be7d0d6a-e3f1-4068-8bfb-543181b29162"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug",
+          "mode": "list",
+          "cachedResultName": "roomReservations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "room",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        220,
+        0
+      ],
+      "id": "cca90716-2be4-44e0-97ad-c72d7e99fb66",
+      "name": "Google Sheets",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nY00U24oj9Jl61sc",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rooms = $input.all().map((item) => item.json);\nreturn { rooms };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "d4ea0cb7-a1d4-47fa-9988-1e9b6e0dee01",
+      "name": "getRooms"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug",
+          "mode": "list",
+          "cachedResultName": "roomReservations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1342995672,
+          "mode": "list",
+          "cachedResultName": "horario",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/157ScAdyUOtvA5dcV0zd7U0yAhkHeSHyJ3YSEccUG9ug/edit#gid=1342995672"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        660,
+        0
+      ],
+      "id": "2cafc9a2-a861-46f6-a23a-244addd290a6",
+      "name": "getSchedule",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nY00U24oj9Jl61sc",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const schedules = $input.all().map((item) => item.json);\nconst uniqueSchedules = schedules.filter(\n  (schedule, index, self) =>\n    index === self.findIndex((t) => t.id_horario === schedule.id_horario),\n);\nconst mergedSchedules = [].concat.apply([], uniqueSchedules);\n\nlet rooms = $\nreturn { schedules: mergedSchedules };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "id": "9ce89d08-a751-4d59-8321-085b6f796911",
+      "name": "getSchedule1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const getSchedule1 = $input.all().map((item) => item.json);\nconst getRooms = $(\"getRooms\")\n  .all()\n  .map((item) => item.json);\n\nconst result = {\n  rooms: getRooms,\n  schedule: getSchedule1,\n};\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ],
+      "id": "9093402a-fa83-4967-bda9-c1b2384c2026",
+      "name": "return"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "getRooms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getRooms": {
+      "main": [
+        [
+          {
+            "node": "getSchedule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getSchedule": {
+      "main": [
+        [
+          {
+            "node": "getSchedule1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getSchedule1": {
+      "main": [
+        [
+          {
+            "node": "return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ee2716d4-6d3e-4186-80f2-b04594c2cb47",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "73bd73ec0b6820b8161bba48d6f6f5dccad84d155d227fd7f9240e434ae037d0"
+  },
+  "id": "oN96if305giOBF9N",
+  "tags": []
+}
