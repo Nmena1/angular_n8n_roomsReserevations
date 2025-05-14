@@ -45,26 +45,25 @@ export class ReservationFormComponent {
 
   getCatalogs() {
     this.downloading = true;
-    this.reservationService.getCatalogs().subscribe(
-      data => {
-        // console.log('Catálogos recibidos:', data);
-       
+
+    this.reservationService.getCatalogs().subscribe({
+      next: (data) => {
+        console.log('Datos recibidos:', data);
         this.rooms = data.rooms[0]?.rooms || [];
         this.schedules = data.schedule[0]?.schedules || [];
-
-        // console.log(this.rooms);
-        // console.log(this.schedules);
-        this.downloading = false;
       },
-      error => {
-        console.error('Error al obtener catálogos', error);
+      error: (error) => {
+        console.error('Error al obtener el catálogo:', error);
+      },
+      complete: () => {
+        console.log('Petición completada');
         this.downloading = false;
-        
       }
-    );
-
-    this.downloading = false;
+    });
+    
   }
+
+  
   
   onSubmit(): void {
 
@@ -74,41 +73,30 @@ export class ReservationFormComponent {
       return;
     }
     
-    // console.log("is the form valid? " + this.form.valid);
     this.downloading = true;
     if (this.form.valid) {
       const formData = this.form.value;
-      // console.log('Formulario enviado:', formData);
-  
-      // this.reservationService.submitReservation(formData).subscribe(
-      //   response => {
-      //     Swal.fire('Éxito', 'Reservación realizada con éxito', 'success');
-      //     this.form.reset();
+      
+      this.verifyReservation(formData);
 
-      //     this.downloading = false;
-      //     console.log(response.menssage);
-      //   },
-      //   error => {
-      //     Swal.fire('Error', 'Ocurrió un error al guardar la reservación', 'error');
-      //     this.downloading = false;
-      //   }
-      // );
-      this.reservationService.submitReservation(formData).subscribe(
-        response => {
+      this.reservationService.submitReservation(formData).subscribe({
+        next: (response) => {
+
           if (response.code === 400) {
             Swal.fire('Error', response.message, 'error');
-            this.downloading = false;
             return;
           }
           Swal.fire('Éxito', response.message, 'success');
           this.form.reset();
-          this.downloading = false;
         },
-        error => {
+        error: (error) => {
           Swal.fire('Error', 'Error inesperado al enviar la solicitud', 'error');
           this.downloading = false;
+        },
+        complete: () => {
+          this.downloading = false;
         }
-      );
+      });
       
     } else {
       this.downloading = false;
@@ -130,13 +118,11 @@ export class ReservationFormComponent {
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    const seconds = now.getSeconds();
     const currentTotalMinutes = hours * 60 + minutes;
-
-    // console.log(`Current time: ${hours}:${minutes}:${seconds}`);
     
     if(!this.isValidScheduleDate(model.schedule, 1)){
       Swal.fire('Fecha Inválido', 'Por favor agregue una fecha igual o mayor a este día.', 'warning');
+      this.downloading = false;
       return;  
     }
 
@@ -144,23 +130,16 @@ export class ReservationFormComponent {
     const startTotalMinutes = startHour * 60; // Ej. 600 minutos
     const reservationDeadline = startTotalMinutes - 30;
     
-    // if ((currentTotalMinutes > reservationDeadline) && (!this.isValidScheduleDate(model.schedule, 0)) ) {
-    //   Swal.fire('Reserva inválida', 'La reservación debe hacerse al menos 30 minutos antes del horario seleccionado.', 'warning');
-    //   return;
-    // }
-    
     if (this.isValidScheduleDate(model.schedule, 0)) { // es hoy
-      // console.log("136 - es hoy")
+
       if (currentTotalMinutes > reservationDeadline) {
         Swal.fire('Reserva inválida', 'La reservación debe hacerse al menos 30 minutos antes del horario seleccionado.', 'warning');
+        this.downloading = false;
         return;
       }
-    }else{
-      // console.log("142 - no es hoy")
     }
-    
 
-    return false;
+    return true;
   }
 
   parseLocalDate(dateStr : string) {
@@ -181,13 +160,11 @@ export class ReservationFormComponent {
       // console.log("154 scheduleDate= " + scheduleDate + ", today=" + today)
       return scheduleDate >= today;
     }else if(isToday == 0){
-      // console.log("157 scheduleDate= " + scheduleDate + ", today=" + today + ", =>" + (scheduleDate == today))
-      // return scheduleDate === today;
+      
       const isSameDay = scheduleDate.getFullYear() === today.getFullYear() &&
                   scheduleDate.getMonth() === today.getMonth() &&
                   scheduleDate.getDate() === today.getDate();
 
-      // console.log("157 scheduleDate=", scheduleDate, ", today=", today, ", =>", isSameDay);
       return isSameDay;
 
     }
